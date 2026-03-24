@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Humidity Monitor</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .latest {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #eee;
+        }
+        .pagination {
+            margin-top: 15px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plant Humidity Monitor</h1>
+    <div class="latest" id="latest">--</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Humidity</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+    <div class="pagination">
+        <button onclick="prevPage()">Prev</button>
+        <span id="pageInfo"></span>
+        <button onclick="nextPage()">Next</button>
+    </div>
+
+    <script>
+        let allReadings = [];
+        let currentPage = 1;
+        const perPage = 5;
+
+        function render() {
+            if (allReadings.length > 0) {
+                const latest = allReadings[0];
+                document.getElementById('latest').textContent = latest.humidity + '%';
+            }
+
+            const totalPages = Math.ceil(allReadings.length / perPage);
+            document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+            const start = (currentPage - 1) * perPage;
+            const page = allReadings.slice(start, start + perPage);
+
+            document.getElementById('tbody').innerHTML = page.map(r =>
+                '<tr><td>' + r.humidity + '%</td><td>' + r.time + '</td></tr>'
+            ).join('');
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(allReadings.length / perPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                render();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                render();
+            }
+        }
+
+        async function fetchData() {
+            const response = await fetch('/data');
+            const readings = await response.json();
+            allReadings = readings.reverse();
+            render();
+        }
+
+        fetchData();
+        setInterval(fetchData, 5000);
+    </script>
+</body>
+</html>
